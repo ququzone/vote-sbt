@@ -24,9 +24,8 @@ func _start(rid uint32) int32 {
 	}
 	res := string(message)
 
-	Account := gjson.Get(res, "Account")
+	account := gjson.Get(res, "account")
 
-	log.Log("wasm get Account from json: " + Account.String())
 	network, err := stream.GetEnv("NETWORK")
 	if err != nil {
 		log.Log(fmt.Sprintf("get network from host failed: %v", err))
@@ -42,15 +41,16 @@ func _start(rid uint32) int32 {
 		log.Log(fmt.Sprintf("get contract from host failed: %v", err))
 		return -1
 	}
+	log.Log("Sending Vote SBT(" + contract + ":" + network + ") to " + account.String())
 
 	// TODO how to read state from chain?
 	blockchain.SendTx(
 		uint32(chainId), // chain id
 		contract,        // contract address
 		big.NewInt(0),
-		fmt.Sprintf("6a627842000000000000000000000000%s", Account.String()),
+		fmt.Sprintf("6a627842000000000000000000000000%s", account.String()),
 	)
-	log.Log("Vote SBT has been sent to :" + Account.String())
+	log.Log("Vote SBT has been sent")
 
 	return 0
 }
