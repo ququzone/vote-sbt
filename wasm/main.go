@@ -12,6 +12,8 @@ import (
 	"github.com/machinefi/w3bstream-wasm-golang-sdk/stream"
 )
 
+var ZERO = big.NewInt(0)
+
 func main() {}
 
 //export start
@@ -41,16 +43,30 @@ func _start(rid uint32) int32 {
 		log.Log(fmt.Sprintf("get contract from host failed: %v", err))
 		return -1
 	}
-	log.Log("Sending Vote SBT(" + contract + ":" + network + ") to " + account.String())
 
-	// TODO how to read state from chain?
-	blockchain.SendTx(
+	data, err := blockchain.CallContract(
 		uint32(chainId), // chain id
 		contract,        // contract address
-		big.NewInt(0),
-		fmt.Sprintf("6a627842000000000000000000000000%s", account.String()),
+		fmt.Sprintf("70a08231000000000000000000000000%s", account.String()),
 	)
-	log.Log("Vote SBT has been sent")
+	if err != nil {
+		log.Log(fmt.Sprintf("Read balanceOf failed: %v", err))
+		return -1
+	}
+	balance := new(big.Int).SetBytes(data)
+
+	if balance.Cmp(ZERO) == 0 {
+		log.Log("Sending Vote SBT(" + contract + ":" + network + ") to " + account.String())
+		blockchain.SendTx(
+			uint32(chainId), // chain id
+			contract,        // contract address
+			big.NewInt(0),
+			fmt.Sprintf("6a627842000000000000000000000000%s", account.String()),
+		)
+		log.Log("Vote SBT has been sent")
+	} else {
+		log.Log(fmt.Sprintf("%s already have Vote SBT", account.String()))
+	}
 
 	return 0
 }
