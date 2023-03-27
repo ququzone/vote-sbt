@@ -16,11 +16,13 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
         bob = vm.addr(0x3);
     }
 
-    function onERC721Received(address, address, uint256, bytes calldata) public pure override returns (bytes4){
+    function onERC721Received(
+        address, address, uint256, bytes calldata
+    ) public pure override returns (bytes4) {
         return ERC721TokenReceiver.onERC721Received.selector;
     }
 
-    function testMintTokens() public{
+    function testMintTokens() public {
         // Check old balance
         uint256 existingBalance = vote.balanceOf(alice);
         vote.mint{value:0}(alice);
@@ -32,7 +34,7 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
         }
     }
 
-    function testCannotTransferTokens() public{
+    function testCannotTransferTokens() public {
         vote.mint{value:0}(alice);
 
         vm.startPrank(alice);
@@ -42,5 +44,12 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
         vote.safeTransferFrom(alice, bob, tokenId);
 
         vm.stopPrank();
+    }
+
+    function testInterface() public {
+        assertEq(vote.supportsInterface(0x01ffc9a7), true); // ERC165
+        assertEq(vote.supportsInterface(0x80ac58cd), true); // ERC721
+        assertEq(vote.supportsInterface(0x5b5e139f), true); // ERC721Metadata
+        assertEq(vote.supportsInterface(0xb45a3c0e), true); // ERC5192
     }
 }

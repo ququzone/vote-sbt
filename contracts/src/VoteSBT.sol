@@ -5,6 +5,9 @@ import "solmate/tokens/ERC721.sol";
 import "solmate/auth/Owned.sol";
 
 contract VoteSBT is Owned, ERC721 {
+    event Locked(uint256 tokenId);
+    event Unlocked(uint256 tokenId);
+
     error TokenIsSoulbound();
 
     string private baseURI;
@@ -21,6 +24,7 @@ contract VoteSBT is Owned, ERC721 {
     function mint(address recipient) public payable onlyOwner returns (uint256) {
         uint256 newItemId = ++currentTokenId;
         _safeMint(recipient, newItemId);
+        emit Locked(newItemId);
         return newItemId;
     }
 
@@ -35,7 +39,17 @@ contract VoteSBT is Owned, ERC721 {
         super.transferFrom(from, to, id);
     }
 
-    function tokenURI(uint256 /*id*/) public view virtual override returns (string memory) {
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == 0xb45a3c0e || // ERC165 Interface ID for ERC5192
+            super.supportsInterface(interfaceId);
+    }
+
+    function tokenURI(uint256 /*tokenId*/) public view virtual override returns (string memory) {
         return baseURI;
+    }
+
+    function locked(uint256 /*tokenId*/) external pure returns (bool) {
+        return true;
     }
 }
