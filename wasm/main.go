@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/big"
+	"strconv"
 
 	"github.com/tidwall/gjson"
 
@@ -26,11 +27,26 @@ func _start(rid uint32) int32 {
 	Account := gjson.Get(res, "Account")
 
 	log.Log("wasm get Account from json: " + Account.String())
+	network, err := stream.GetEnv("NETWORK")
+	if err != nil {
+		log.Log(fmt.Sprintf("get network from host failed: %v", err))
+		return -1
+	}
+	chainId, err := strconv.ParseUint(network, 10, 32)
+	if err != nil {
+		log.Log(fmt.Sprintf("convert network to chainId failed: %v", err))
+		return -1
+	}
+	contract, err := stream.GetEnv("CONTRACT")
+	if err != nil {
+		log.Log(fmt.Sprintf("get contract from host failed: %v", err))
+		return -1
+	}
 
 	// TODO how to read state from chain?
 	blockchain.SendTx(
-		4690, // chain id
-		"0x8AA6C8023EEe0Fc89a4e7eBfcAE7F21876311410", // contract address
+		uint32(chainId), // chain id
+		contract,        // contract address
 		big.NewInt(0),
 		fmt.Sprintf("6a627842000000000000000000000000%s", Account.String()),
 	)
