@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/hex"
 	"fmt"
 	"math/big"
 	"strconv"
@@ -13,6 +14,33 @@ import (
 )
 
 var ZERO = big.NewInt(0)
+
+const (
+	// number of bits in a big.Word
+	wordBits = 32 << (uint64(^big.Word(0)) >> 63)
+	// number of bytes in a big.Word
+	wordBytes = wordBits / 8
+)
+
+func ReadBits(bigint *big.Int, buf []byte) {
+	i := len(buf)
+	for _, d := range bigint.Bits() {
+		for j := 0; j < wordBytes && i > 0; j++ {
+			i--
+			buf[i] = byte(d)
+			d >>= 8
+		}
+	}
+}
+
+func PaddedBigBytes(bigint *big.Int, n int) []byte {
+	if bigint.BitLen()/8 >= n {
+		return bigint.Bytes()
+	}
+	ret := make([]byte, n)
+	ReadBits(bigint, ret)
+	return ret
+}
 
 func main() {}
 
@@ -27,6 +55,7 @@ func _start(rid uint32) int32 {
 	res := string(message)
 
 	account := gjson.Get(res, "account")
+	tokenId := gjson.Get(res, "tokenId")
 
 	network, err := stream.GetEnv("NETWORK")
 	if err != nil {
@@ -44,10 +73,17 @@ func _start(rid uint32) int32 {
 		return -1
 	}
 
+	tokenIdBig, ok := new(big.Int).SetString(tokenId.String(), 10)
+	if !ok {
+		log.Log(fmt.Sprintf("convert tokenId to BigInt failed: %s", tokenId.String()))
+		return -1
+	}
+	tokenIdHex := hex.EncodeToString(PaddedBigBytes(tokenIdBig, 32))
+
 	data, err := blockchain.CallContract(
 		uint32(chainId), // chain id
 		contract,        // contract address
-		fmt.Sprintf("70a08231000000000000000000000000%s", account.String()),
+		fmt.Sprintf("00fdd58e000000000000000000000000%s%s", account.String(), tokenIdHex),
 	)
 	if err != nil {
 		log.Log(fmt.Sprintf("Read balanceOf failed: %v", err))
@@ -61,7 +97,7 @@ func _start(rid uint32) int32 {
 			uint32(chainId), // chain id
 			contract,        // contract address
 			big.NewInt(0),
-			fmt.Sprintf("6a627842000000000000000000000000%s", account.String()),
+			fmt.Sprintf("40c10f19000000000000000000000000%s%s", account.String(), tokenIdHex),
 		)
 		log.Log("Vote SBT has been sent")
 	} else {
