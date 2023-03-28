@@ -7,11 +7,13 @@ import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
 
 contract VoteSBTTest is Test, ERC721TokenReceiver {
     VoteSBT vote;
+    uint256 internal tokenId;
     address internal alice;
     address internal bob;
 
     function setUp() public {
-        vote = new VoteSBT("I Vote", "IVOTE", "");
+        vote = new VoteSBT("https://nftassets.com/");
+        tokenId = vote.newToken();
         alice = vm.addr(0x2);
         bob = vm.addr(0x3);
     }
@@ -24,9 +26,11 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
 
     function testMintTokens() public {
         // Check old balance
-        uint256 existingBalance = vote.balanceOf(alice);
-        vote.mint{value:0}(alice);
-        uint256 newBalance = vote.balanceOf(alice);
+        uint256 existingBalance = vote.balanceOf(alice, tokenId);
+        vote.mint{value:0}(alice, tokenId);
+        uint256 newBalance = vote.balanceOf(alice, tokenId);
+
+        assertEq(vote.uri(tokenId), "https://nftassets.com/1.json");
 
         // Check that our token balance increased by 1
         if(newBalance - existingBalance != 1){
@@ -35,21 +39,27 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
     }
 
     function testCannotTransferTokens() public {
-        vote.mint{value:0}(alice);
+        vote.mint{value:0}(alice, tokenId);
 
         vm.startPrank(alice);
-        uint256 tokenId = vote.currentTokenId() - 1;
-
         vm.expectRevert(abi.encodeWithSignature("TokenIsSoulbound()"));
-        vote.safeTransferFrom(alice, bob, tokenId);
+        vote.safeTransferFrom(alice, bob, tokenId, 1, "");
+
+        uint256[] memory tokenIds = new uint256[](1);
+        tokenIds[0] = tokenId;
+        uint256[] memory amounts = new uint256[](1);
+        amounts[0] = 1;
+        
+        vm.expectRevert(abi.encodeWithSignature("TokenIsSoulbound()"));
+        vote.safeBatchTransferFrom(alice, bob, tokenIds, amounts, "");
 
         vm.stopPrank();
     }
 
     function testInterface() public {
         assertEq(vote.supportsInterface(0x01ffc9a7), true); // ERC165
-        assertEq(vote.supportsInterface(0x80ac58cd), true); // ERC721
-        assertEq(vote.supportsInterface(0x5b5e139f), true); // ERC721Metadata
+        assertEq(vote.supportsInterface(0xd9b67a26), true); // ERC1155
+        assertEq(vote.supportsInterface(0x0e89341c), true); // ERC1155MetadataURI
         assertEq(vote.supportsInterface(0xb45a3c0e), true); // ERC5192
     }
 }

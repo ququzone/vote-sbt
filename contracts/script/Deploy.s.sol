@@ -7,7 +7,7 @@ import "../src/VoteSBT.sol";
 contract Deploy is Script {
     function run() external {
         vm.startBroadcast();
-        new VoteSBT("I Vote", "IVOTE", "");
+        new VoteSBT("https://nftassets.com/");
         vm.stopBroadcast();
     }
 }
