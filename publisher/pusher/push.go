@@ -29,13 +29,13 @@ func Push(token string, account string, tokenId string) error {
 	url := "http://34.146.117.200:3001/api/w3bapp/event/vote_sbt_testnet"
 	method := "POST"
 
-	payload := fmt.Sprintf(`{"payload": {"account": "%s","tokenId": "%s"}}`, account, tokenId)
+	payload := fmt.Sprintf(`{"account": "%s","tokenId": "%s"}`, account, tokenId)
 	payload = base64.StdEncoding.EncodeToString([]byte(payload))
 	body := &Body{
 		Events: []Event{{
 			Header: Header{
 				PubId:     "vote_sbt_publisher",
-				PubTime:   time.Now().Unix(),
+				PubTime:   time.Now().Unix() * 1000,
 				EventType: "ANY",
 				Token:     token,
 			},
@@ -57,5 +57,11 @@ func Push(token string, account string, tokenId string) error {
 		return err
 	}
 	defer res.Body.Close()
+
+	// resBody, err := ioutil.ReadAll(res.Body)
+	// if err != nil {
+	// 	return err
+	// }
+	// fmt.Println(string(resBody))
 	return nil
 }
