@@ -8,14 +8,18 @@ import {ERC721TokenReceiver} from "solmate/tokens/ERC721.sol";
 contract VoteSBTTest is Test, ERC721TokenReceiver {
     VoteSBT vote;
     uint256 internal tokenId;
+    address internal minter;
     address internal alice;
     address internal bob;
 
     function setUp() public {
         vote = new VoteSBT("https://nftassets.com/");
         tokenId = vote.newToken();
-        alice = vm.addr(0x2);
-        bob = vm.addr(0x3);
+        alice = vm.addr(0x1);
+        bob = vm.addr(0x2);
+        minter = vm.addr(0x3);
+
+        vote.addMinter(minter);
     }
 
     function onERC721Received(
@@ -27,6 +31,9 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
     function testMintTokens() public {
         // Check old balance
         uint256 existingBalance = vote.balanceOf(alice, tokenId);
+        vm.expectRevert("ONLY_MINTER");
+        vote.mint{value:0}(alice, tokenId);
+        vm.prank(minter);
         vote.mint{value:0}(alice, tokenId);
         uint256 newBalance = vote.balanceOf(alice, tokenId);
 
@@ -39,6 +46,7 @@ contract VoteSBTTest is Test, ERC721TokenReceiver {
     }
 
     function testCannotTransferTokens() public {
+        vm.prank(minter);
         vote.mint{value:0}(alice, tokenId);
 
         vm.startPrank(alice);

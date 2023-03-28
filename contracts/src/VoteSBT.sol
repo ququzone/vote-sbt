@@ -12,8 +12,14 @@ contract VoteSBT is Owned, ERC1155 {
     error TokenIsSoulbound();
 
     mapping (uint256 => bool) private tokens;
+    mapping (address => bool) private minters;
     string private baseUri;
     uint256 private currentTokenId;
+
+    modifier onlyMinter() virtual {
+        require(minters[msg.sender], "ONLY_MINTER");
+        _;
+    }
 
     constructor(string memory _baseUri) Owned(msg.sender) {
         baseUri = _baseUri;
@@ -26,7 +32,15 @@ contract VoteSBT is Owned, ERC1155 {
         return newItemId;
     }
 
-    function mint(address recipient, uint256 tokenId) public payable onlyOwner {
+    function addMinter(address minter) external onlyOwner {
+        minters[minter] = true;
+    }
+
+    function removeMinter(address minter) external onlyOwner {
+        minters[minter] = false;
+    }
+
+    function mint(address recipient, uint256 tokenId) public payable onlyMinter {
         if(tokens[tokenId] != true) {
             revert TokenNotExist(tokenId);
         }
