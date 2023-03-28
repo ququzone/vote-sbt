@@ -26,7 +26,7 @@ type Event struct {
 }
 
 func Push(token string, account string, tokenId string) error {
-	url := "http://34.146.117.200:3001/api/w3bapp/event/vote_sbt_testnet"
+	url := "http://34.146.117.200:8887/srv-applet-mgr/v0/event/vote_sbt_testnet"
 	method := "POST"
 
 	payload := fmt.Sprintf(`{"account": "%s","tokenId": "%s"}`, account, tokenId)
