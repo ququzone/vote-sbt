@@ -11,8 +11,8 @@ contract VoteSBT is Owned, ERC1155 {
     error TokenNotExist(uint256 tokenId);
     error TokenIsSoulbound();
 
+    mapping (address => bool) public minters;
     mapping (uint256 => bool) private tokens;
-    mapping (address => bool) private minters;
     string private baseUri;
     uint256 private currentTokenId;
 
