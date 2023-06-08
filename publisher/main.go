@@ -12,12 +12,12 @@ func main() {
 	token := os.Getenv("TOKEN")
 	var skip uint64 = 0
 	for {
-		voters, err := fetcher.Fetch("0x3243e5577acb0b8b2f4d9728071d713b02a26b1c247dbbd727e0b3a1b9343659", skip)
+		voters, err := fetcher.Fetch("0x8e171d0b0d2d74e82dc37359411d9eb286482a6c08ad52563ca265d84de738f9", skip)
 		if err != nil {
 			log.Fatalf("fetch voter error: %v\n", err)
 		}
 		for _, v := range voters {
-			err := pusher.Push(token, v[2:], "3")
+			err := pusher.Push(token, v[2:], "4")
 			if err != nil {
 				log.Printf("post mint data to node error: %v\n", err)
 			}
